@@ -1,0 +1,13 @@
+[ndbd default]
+NoOfReplicas=1
+
+[ndb_mgmd]
+hostname=management-node-a
+nodeid=4
+
+[ndbd]
+hostname=data-node-a
+nodeid=2
+
+[mysqld]
+hostname=application-node

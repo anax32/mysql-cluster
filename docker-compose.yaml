@@ -1,0 +1,55 @@
+version: "3.6"
+
+networks:
+  mysql-cluster:
+
+services:
+  management-node-a:
+    networks: [mysql-cluster]
+    image: mysql/mysql-cluster
+    container_name: management-node-a
+    volumes:
+      - ./mysql-cluster.cnf:/etc/mysql-cluster.cnf:ro
+      - management-node-data:/var/lib/mysql
+    ports:
+      - 1186
+    command: ["ndb_mgmd", "--ndb-nodeid=4", "--ndb-connectstring=nodeid=2;host=data-node-a"]
+
+    depends_on:
+      - data-node-a
+      - data-node-b
+      - application-node
+
+  data-node-a:
+    networks: [mysql-cluster]
+    image: mysql/mysql-cluster
+    ports:
+      - 1186
+    command: ["ndbd", "--ndb-nodeid=2", "--ndb-connectstring=nodeid=4;host=management-node-a"]
+
+  data-node-b:
+    networks: [mysql-cluster]
+    image: mysql/mysql-cluster
+    environment:
+      - NDB_CONNECTSTRING="nodeid=4;host=management-node-a"
+    ports:
+      - 1186
+    command: ndbd
+
+  application-node:
+    networks: [mysql-cluster]
+    image: mysql/mysql-cluster
+    ports:
+      - 1186
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=true
+    command: mysqld
+    depends_on:
+      - data-node-a
+      - data-node-b
+
+volumes:
+  management-node-data:
+  data-node-a-data:
+  data-node-b-data:
+  mysql-node-data:
